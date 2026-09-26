@@ -8,6 +8,29 @@ from typing import Any
 
 from app.seed import SEED_ROWS
 
+# 模块中文名与展示顺序：和前端导航、各模块页面标题保持一致，
+# 概览清单按这个顺序输出，保证看板与模块页面说的是同一批模块。
+MODULE_LABELS: dict[str, str] = {
+    "berth": "泊位计划",
+    "vessel": "船舶档案",
+    "voyage": "航次管理",
+    "crane": "岸桥作业",
+    "loading": "装卸任务",
+    "yard": "堆场管理",
+    "container": "集装箱档案",
+    "yardstore": "堆存记录",
+    "gate": "闸口通行",
+    "truck": "集卡调度",
+    "tally": "理货作业",
+    "damage": "残损登记",
+    "manifest": "单证处理",
+    "storage": "堆存计费",
+    "pilot": "引航拖轮",
+    "safety": "安全监督",
+    "customer": "货主档案",
+    "settle": "作业结算",
+}
+
 
 class Store:
     def __init__(self) -> None:
@@ -28,13 +51,18 @@ class Store:
         return None
 
     def overview(self) -> dict[str, object]:
+        """按同一份业务数据汇总看板口径。
+
+        待处理只算仍需跟进且未标记异常的记录：已处理（pending=False）不再计入，
+        异常记录单独进异常量，不从待处理里扣、也不重复显示成待处理。
+        """
         modules: list[dict[str, object]] = []
-        for name in self.module_names():
-            rows = self.rows(name)
+        for key, label in MODULE_LABELS.items():
+            rows = self.rows(key)
             modules.append({
-                "name": name,
+                "name": label,
                 "created": len(rows),
-                "pending": sum(1 for row in rows if row.get("pending")),
+                "pending": sum(1 for row in rows if row.get("pending") and not row.get("abnormal")),
                 "abnormal": sum(1 for row in rows if row.get("abnormal")),
             })
         cards = [

@@ -56,6 +56,7 @@ class TruckService:
         if target not in STATUS_ORDER:
             return None, f"目标状态「{target}」不在允许的状态序列里"
         entry["status"] = target
-        entry["pending"] = target != STATUS_ORDER[-1]
+        # 与示例数据口径一致：状态走到第三档即视为已处理，不再计入待处理
+        entry["pending"] = STATUS_ORDER.index(target) < 2
         entry["abnormal"] = action in NEGATIVE_ACTIONS
         return entry, f"集卡已{action}"
