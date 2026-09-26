@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.store import store
+from app.store import is_pending_status, store
 
 MODULE = "truck"
 REQUIRED_FIELDS = ["调度单号", "集卡牌号", "司机姓名"]
@@ -56,6 +56,6 @@ class TruckService:
         if target not in STATUS_ORDER:
             return None, f"目标状态「{target}」不在允许的状态序列里"
         entry["status"] = target
-        entry["pending"] = target != STATUS_ORDER[-1]
+        entry["pending"] = is_pending_status(target)
         entry["abnormal"] = action in NEGATIVE_ACTIONS
         return entry, f"集卡已{action}"

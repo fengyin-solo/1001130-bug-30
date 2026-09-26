@@ -66,6 +66,7 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { useModuleStats } from '@/composables/useModuleStats'
 
 type Row = Record<string, string | number | null>
 
@@ -73,7 +74,7 @@ const ENDPOINT = '/api/voyage'
 const columns = ["航次编号", "关联船舶", "进口航次号", "出口航次号", "预计到港", "实际到港", "航线名称", "航次状态"]
 const actions = ["确认开航", "确认到港", "结航航次"]
 const statuses = ["待开航", "航行中", "已到港", "已结航"]
-const stats = [{"label": "航行中航次", "value": 0}, {"label": "今日到港航次", "value": 0}, {"label": "待结航航次", "value": 0}]
+const { stats, refreshStats } = useModuleStats('voyage')
 
 const rows = ref<Row[]>([])
 const total = ref(0)
@@ -105,6 +106,7 @@ async function runAction(action: string, row: Row) {
       throw new Error('航次管理动作未生效，请稍后重试')
     }
     await reload()
+    await refreshStats()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '航次管理操作失败'
   }

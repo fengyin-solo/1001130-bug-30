@@ -66,6 +66,7 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { useModuleStats } from '@/composables/useModuleStats'
 
 type Row = Record<string, string | number | null>
 
@@ -73,7 +74,7 @@ const ENDPOINT = '/api/truck'
 const columns = ["调度单号", "集卡牌号", "司机姓名", "作业任务", "派车时间", "返回时间", "所属车队", "调度状态"]
 const actions = ["确认派车", "确认返回", "取消调度"]
 const statuses = ["待派车", "作业中", "已返回", "已取消"]
-const stats = [{"label": "待派车任务", "value": 0}, {"label": "作业中集卡", "value": 0}, {"label": "今日派车次数", "value": 0}]
+const { stats, refreshStats } = useModuleStats('truck')
 
 const rows = ref<Row[]>([])
 const total = ref(0)
@@ -105,6 +106,7 @@ async function runAction(action: string, row: Row) {
       throw new Error('集卡调度动作未生效，请稍后重试')
     }
     await reload()
+    await refreshStats()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '集卡调度操作失败'
   }

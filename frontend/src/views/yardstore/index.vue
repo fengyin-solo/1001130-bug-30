@@ -66,6 +66,7 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { useModuleStats } from '@/composables/useModuleStats'
 
 type Row = Record<string, string | number | null>
 
@@ -73,7 +74,7 @@ const ENDPOINT = '/api/yardstore'
 const columns = ["堆存单号", "关联箱号", "箱区编号", "贝位号", "堆存开始", "堆存结束", "堆存天数", "堆存状态"]
 const actions = ["确认进场", "确认提离", "撤销堆存"]
 const statuses = ["待进场", "堆存中", "待提离", "已提离"]
-const stats = [{"label": "堆存中箱量", "value": 0}, {"label": "今日进场箱量", "value": 0}, {"label": "今日提离箱量", "value": 0}]
+const { stats, refreshStats } = useModuleStats('yardstore')
 
 const rows = ref<Row[]>([])
 const total = ref(0)
@@ -105,6 +106,7 @@ async function runAction(action: string, row: Row) {
       throw new Error('堆存记录动作未生效，请稍后重试')
     }
     await reload()
+    await refreshStats()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '堆存记录操作失败'
   }

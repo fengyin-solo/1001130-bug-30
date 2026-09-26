@@ -66,6 +66,7 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { useModuleStats } from '@/composables/useModuleStats'
 
 type Row = Record<string, string | number | null>
 
@@ -73,7 +74,7 @@ const ENDPOINT = '/api/yard'
 const columns = ["箱区编号", "箱区名称", "堆放层数", "可用箱位", "已用箱位", "所属堆场", "责任人", "箱区状态"]
 const actions = ["启用箱区", "封闭箱区", "腾空箱区"]
 const statuses = ["待启用", "正常堆放", "接近满载", "已封闭"]
-const stats = [{"label": "在用箱区", "value": 0}, {"label": "接近满载箱区", "value": 0}, {"label": "可用箱位总数", "value": 0}]
+const { stats, refreshStats } = useModuleStats('yard')
 
 const rows = ref<Row[]>([])
 const total = ref(0)
@@ -105,6 +106,7 @@ async function runAction(action: string, row: Row) {
       throw new Error('堆场管理动作未生效，请稍后重试')
     }
     await reload()
+    await refreshStats()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '堆场管理操作失败'
   }

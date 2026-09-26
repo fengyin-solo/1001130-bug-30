@@ -8,6 +8,37 @@ from typing import Any
 
 from app.seed import SEED_ROWS
 
+# 模块键对应的中文名：概览清单与前端导航、各模块页面标题用同一份叫法。
+MODULE_LABELS: dict[str, str] = {
+    "berth": "泊位计划",
+    "vessel": "船舶档案",
+    "voyage": "航次管理",
+    "crane": "岸桥作业",
+    "loading": "装卸任务",
+    "yard": "堆场管理",
+    "container": "集装箱档案",
+    "yardstore": "堆存记录",
+    "gate": "闸口通行",
+    "truck": "集卡调度",
+    "tally": "理货作业",
+    "damage": "残损登记",
+    "manifest": "单证处理",
+    "storage": "堆存计费",
+    "pilot": "引航拖轮",
+    "safety": "安全监督",
+    "customer": "货主档案",
+    "settle": "作业结算",
+}
+
+
+def is_pending_status(status: object) -> bool:
+    """待处理口径：状态以「待」开头才算待处理。
+
+    已流转的状态（已编排、已放行、作业中……）一律不再计入待处理；
+    异常量按 abnormal 标志单独统计，不从待处理里扣，也不重复算进待处理。
+    """
+    return str(status or "").startswith("待")
+
 
 class Store:
     def __init__(self) -> None:
@@ -27,16 +58,20 @@ class Store:
                 return row
         return None
 
+    def module_summary(self, module: str) -> dict[str, object]:
+        """单个模块的汇总：新增、待处理、异常量都按当前记录实时重算。"""
+        rows = self.rows(module)
+        return {
+            "key": module,
+            "name": MODULE_LABELS.get(module, module),
+            "created": len(rows),
+            "pending": sum(1 for row in rows if is_pending_status(row.get("status"))),
+            "abnormal": sum(1 for row in rows if row.get("abnormal")),
+        }
+
     def overview(self) -> dict[str, object]:
-        modules: list[dict[str, object]] = []
-        for name in self.module_names():
-            rows = self.rows(name)
-            modules.append({
-                "name": name,
-                "created": len(rows),
-                "pending": sum(1 for row in rows if row.get("pending")),
-                "abnormal": sum(1 for row in rows if row.get("abnormal")),
-            })
+        """运营概览：卡片由各模块汇总行求和得出，保证卡片与清单是同一份数。"""
+        modules = [self.module_summary(name) for name in self.module_names()]
         cards = [
             {"label": "业务模块", "value": len(modules)},
             {"label": "今日新增", "value": sum(int(item["created"]) for item in modules)},

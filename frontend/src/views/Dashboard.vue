@@ -7,7 +7,7 @@
       </div>
     </header>
     <div class="stat-row">
-      <article v-for="card in cards" :key="card.label" class="stat-card">
+      <article v-for="card in overview.cards" :key="card.label" class="stat-card">
         <span class="stat-label">{{ card.label }}</span>
         <strong class="stat-value">{{ card.value }}</strong>
       </article>
@@ -17,38 +17,36 @@
         <tr><th>业务模块</th><th>今日新增</th><th>待处理</th><th>异常量</th></tr>
       </thead>
       <tbody>
-        <tr v-for="row in moduleRows" :key="row.name">
+        <tr v-for="row in overview.modules" :key="row.key">
           <td>{{ row.name }}</td>
           <td>{{ row.created }}</td>
           <td>{{ row.pending }}</td>
           <td>{{ row.abnormal }}</td>
         </tr>
+        <tr v-if="!overview.modules.length">
+          <td colspan="4" class="empty-state">暂无概览数据</td>
+        </tr>
       </tbody>
     </table>
+    <footer v-if="overview.error" class="page-foot">
+      <span class="error-text">{{ overview.error }}</span>
+      <button class="btn" type="button" @click="retry">重新加载</button>
+    </footer>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 
-import { fetchJson } from '@/api/client'
+import { useOverviewStore } from '@/stores/overview'
 
-type Overview = {
-  cards: { label: string; value: number }[]
-  modules: { name: string; created: number; pending: number; abnormal: number }[]
+const overview = useOverviewStore()
+
+function retry() {
+  void overview.refresh(true)
 }
 
-const cards = ref<Overview['cards']>([])
-const moduleRows = ref<Overview['modules']>([])
-
-onMounted(async () => {
-  try {
-    const payload = await fetchJson<Overview>('/api/overview')
-    cards.value = payload.cards
-    moduleRows.value = payload.modules
-  } catch {
-    cards.value = [{"label": "业务模块", "value": 0}, {"label": "今日新增", "value": 0}]
-    moduleRows.value = [{"name": "泊位计划", "created": 0, "pending": 0, "abnormal": 0}, {"name": "船舶档案", "created": 0, "pending": 0, "abnormal": 0}, {"name": "航次管理", "created": 0, "pending": 0, "abnormal": 0}, {"name": "岸桥作业", "created": 0, "pending": 0, "abnormal": 0}, {"name": "装卸任务", "created": 0, "pending": 0, "abnormal": 0}, {"name": "堆场管理", "created": 0, "pending": 0, "abnormal": 0}, {"name": "集装箱档案", "created": 0, "pending": 0, "abnormal": 0}, {"name": "堆存记录", "created": 0, "pending": 0, "abnormal": 0}, {"name": "闸口通行", "created": 0, "pending": 0, "abnormal": 0}, {"name": "集卡调度", "created": 0, "pending": 0, "abnormal": 0}, {"name": "理货作业", "created": 0, "pending": 0, "abnormal": 0}, {"name": "残损登记", "created": 0, "pending": 0, "abnormal": 0}, {"name": "单证处理", "created": 0, "pending": 0, "abnormal": 0}, {"name": "堆存计费", "created": 0, "pending": 0, "abnormal": 0}, {"name": "引航拖轮", "created": 0, "pending": 0, "abnormal": 0}, {"name": "安全监督", "created": 0, "pending": 0, "abnormal": 0}, {"name": "货主档案", "created": 0, "pending": 0, "abnormal": 0}, {"name": "作业结算", "created": 0, "pending": 0, "abnormal": 0}]
-  }
+onMounted(() => {
+  void overview.refresh()
 })
 </script>

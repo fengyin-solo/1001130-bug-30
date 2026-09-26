@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.store import store
+from app.store import is_pending_status, store
 
 MODULE = "safety"
 REQUIRED_FIELDS = ["检查编号", "检查区域", "检查类型"]
@@ -56,6 +56,6 @@ class SafetyService:
         if target not in STATUS_ORDER:
             return None, f"目标状态「{target}」不在允许的状态序列里"
         entry["status"] = target
-        entry["pending"] = target != STATUS_ORDER[-1]
+        entry["pending"] = is_pending_status(target)
         entry["abnormal"] = action in NEGATIVE_ACTIONS
         return entry, f"安全检查已{action}"

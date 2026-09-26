@@ -66,6 +66,7 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { useModuleStats } from '@/composables/useModuleStats'
 
 type Row = Record<string, string | number | null>
 
@@ -73,7 +74,7 @@ const ENDPOINT = '/api/storage'
 const columns = ["计费单号", "关联箱号", "计费周期", "堆存天数", "计费标准", "应收金额", "客户名称", "计费状态"]
 const actions = ["生成账单", "确认对账", "开具发票"]
 const statuses = ["待核算", "已核算", "已对账", "已开票"]
-const stats = [{"label": "待核算计费单", "value": 0}, {"label": "本月应收金额", "value": 0}, {"label": "已开票金额", "value": 0}]
+const { stats, refreshStats } = useModuleStats('storage')
 
 const rows = ref<Row[]>([])
 const total = ref(0)
@@ -105,6 +106,7 @@ async function runAction(action: string, row: Row) {
       throw new Error('堆存计费动作未生效，请稍后重试')
     }
     await reload()
+    await refreshStats()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '堆存计费操作失败'
   }

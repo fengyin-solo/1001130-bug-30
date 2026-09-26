@@ -66,6 +66,7 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { useModuleStats } from '@/composables/useModuleStats'
 
 type Row = Record<string, string | number | null>
 
@@ -73,7 +74,7 @@ const ENDPOINT = '/api/customer'
 const columns = ["客户编码", "客户名称", "客户类型", "联系人", "联系电话", "结算方式", "信用等级", "客户状态"]
 const actions = ["审核客户", "暂停合作", "终止合作"]
 const statuses = ["待审核", "合作中", "已暂停", "已终止"]
-const stats = [{"label": "合作货主", "value": 0}, {"label": "待审核货主", "value": 0}, {"label": "本月新增货主", "value": 0}]
+const { stats, refreshStats } = useModuleStats('customer')
 
 const rows = ref<Row[]>([])
 const total = ref(0)
@@ -105,6 +106,7 @@ async function runAction(action: string, row: Row) {
       throw new Error('货主档案动作未生效，请稍后重试')
     }
     await reload()
+    await refreshStats()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '货主档案操作失败'
   }

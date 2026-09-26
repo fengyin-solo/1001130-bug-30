@@ -66,6 +66,7 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { useModuleStats } from '@/composables/useModuleStats'
 
 type Row = Record<string, string | number | null>
 
@@ -73,7 +74,7 @@ const ENDPOINT = '/api/settle'
 const columns = ["结算单号", "结算对象", "结算周期", "作业量", "应收金额", "已收金额", "开票状态", "结算状态"]
 const actions = ["发起核对", "确认结算", "标记争议"]
 const statuses = ["待核对", "核对中", "已确认", "已收款", "有争议"]
-const stats = [{"label": "待核对结算单", "value": 0}, {"label": "本月结算额", "value": 0}, {"label": "争议单数", "value": 0}]
+const { stats, refreshStats } = useModuleStats('settle')
 
 const rows = ref<Row[]>([])
 const total = ref(0)
@@ -105,6 +106,7 @@ async function runAction(action: string, row: Row) {
       throw new Error('作业结算动作未生效，请稍后重试')
     }
     await reload()
+    await refreshStats()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '作业结算操作失败'
   }

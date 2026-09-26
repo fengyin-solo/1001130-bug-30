@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.store import store
+from app.store import is_pending_status, store
 
 MODULE = "container"
 REQUIRED_FIELDS = ["箱号", "箱型", "箱况等级"]
@@ -56,6 +56,6 @@ class ContainerService:
         if target not in STATUS_ORDER:
             return None, f"目标状态「{target}」不在允许的状态序列里"
         entry["status"] = target
-        entry["pending"] = target != STATUS_ORDER[-1]
+        entry["pending"] = is_pending_status(target)
         entry["abnormal"] = action in NEGATIVE_ACTIONS
         return entry, f"集装箱已{action}"
